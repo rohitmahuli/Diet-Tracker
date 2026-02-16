@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthy Diet Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .calendar-section {
+            margin-top: 30px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 10px;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .calendar-day.today {
+            border: 3px solid #667eea;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+        }
+
+        .calendar-day.completed {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .calendar-day.partial {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .day-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .day-score {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-nav button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .month-nav button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .month-title {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+
+        .legend-box.completed {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .legend-box.partial {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .legend-box.none {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+        }
+
+        .day-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .day-detail-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .modal-food-list {
+            margin-top: 20px;
+        }
+
+        .modal-food-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .frequency-section {
+            margin-bottom: 30px;
+        }
+
+        .frequency-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .frequency-header:hover {
+            transform: translateX(5px);
+        }
+
+        .frequency-header.weekly {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .frequency-header.monthly {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .frequency-icon {
+            font-size: 2em;
+        }
+
+        .frequency-title {
+            flex: 1;
+        }
+
+        .frequency-title h3 {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .frequency-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .food-item {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .food-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .food-item.checked {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            opacity: 0.7;
+        }
+
+        .food-item.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 2em;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .food-emoji {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .food-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .tracking-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .history-card {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.5s ease;
+        }
+
+        .history-date {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .motivational-quote {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+            font-style: italic;
+            font-size: 1.1em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-btn.export {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .action-btn.import {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .action-btn.pdf {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        #importFile {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 20px;
+            }
+            .tracking-panel, .reset-btn, .action-buttons, .frequency-header {
+                display: none;
+            }
+            .card {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            .calendar-section {
+                page-break-before: always;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥗 Healthy Diet Tracker</h1>
+            <p class="subtitle">Track your nutrition journey, one meal at a time</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>📋 Food Frequency Guide</h2>
+
+                <div class="frequency-section">
+                    <div class="frequency-header daily">
+                        <span class="frequency-icon">☀️</span>
+                        <div class="frequency-title">
+                            <h3>Daily Essentials</h3>
+                            <p class="frequency-subtitle">Have these every day for optimal health</p>
+                        </div>
+                    </div>
+                    <div class="food-grid" id="dailyFoods"></div>
+                </div>
+
+                <div class="frequency-section">
+                    <div class="frequency-header weekly">
+                        <span class="frequency-icon">📅</span>
+                        <div class="frequency-title">
+                            <h3>Weekly Variety</h3>
+                            <p class="frequency-subtitle">Aim for 2-3 times per week</p>
+                        </div>
+                    </div>
+                    <div class="food-grid" id="weeklyFoods"></div>
+                </div>
+
+                <div class="frequency-section">
+                    <div class="frequency-header monthly">
+                        <span class="frequency-icon">🌙</span>
+                        <div class="frequency-title">
+                            <h3>Monthly Treats</h3>
+                            <p class="frequency-subtitle">Occasional indulgences (1-2 times per month)</p>
+                        </div>
+                    </div>
+                    <div class="food-grid" id="monthlyFoods"></div>
+                </div>
+            </div>
+
+            <div class="tracking-panel">
+                <div class="stats-card">
+                    <h2>📊 Today's Progress</h2>
+                    <div class="stat-item">
+                        <span class="stat-label">Daily Goals</span>
+                        <span class="stat-value" id="dailyCount">0/8</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="dailyProgress"></div>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-label">Weekly Goals</span>
+                        <span class="stat-value" id="weeklyCount">0/6</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="weeklyProgress"></div>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-label">Streak</span>
+                        <span class="stat-value" id="streak">0 days 🔥</span>
+                    </div>
+                </div>
+
+                <div class="card history-card">
+                    <h2>🕐 Recent Activity</h2>
+                    <div id="historyList"></div>
+                </div>
+
+                <button class="reset-btn" onclick="resetToday()">🔄 Reset Today</button>
+
+                <div class="action-buttons">
+                    <button class="action-btn export" onclick="exportData()">📥 Export Data</button>
+                    <button class="action-btn import" onclick="document.getElementById('importFile').click()">📤 Import Data</button>
+                    <button class="action-btn pdf" onclick="printReport()">📄 Print/PDF</button>
+                </div>
+                <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+
+                <div class="motivational-quote" id="quote">
+                    "Your body is a temple, nourish it with care!"
+                </div>
+            </div>
+        </div>
+
+        <div class="card calendar-section">
+            <h2>📅 Progress Calendar</h2>
+            <div class="month-nav">
+                <button onclick="changeMonth(-1)">← Previous</button>
+                <div class="month-title" id="monthTitle"></div>
+                <button onclick="changeMonth(1)">Next →</button>
+            </div>
+            <div class="calendar-header">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box completed"></div>
+                    <span>Great Day (75%+ goals)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box partial"></div>
+                    <span>Good Effort (50-74%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box none"></div>
+                    <span>No data</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="day-detail-modal" id="dayModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalDate"></h2>
+                    <button class="close-modal" onclick="closeModal()">×</button>
+                </div>
+                <div id="modalStats"></div>
+                <div class="modal-food-list" id="modalFoodList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const foods = {
+            daily: [
+                { name: 'Leafy Greens', emoji: '🥬' },
+                { name: 'Fresh Fruits', emoji: '🍎' },
+                { name: 'Whole Grains', emoji: '🌾' },
+                { name: 'Lean Protein', emoji: '🍗' },
+                { name: 'Nuts & Seeds', emoji: '🥜' },
+                { name: 'Water (8 cups)', emoji: '💧' },
+                { name: 'Vegetables', emoji: '🥕' },
+                { name: 'Healthy Fats', emoji: '🥑' }
+            ],
+            weekly: [
+                { name: 'Fish', emoji: '🐟' },
+                { name: 'Eggs', emoji: '🥚' },
+                { name: 'Legumes', emoji: '🫘' },
+                { name: 'Yogurt', emoji: '🥛' },
+                { name: 'Berries', emoji: '🫐' },
+                { name: 'Sweet Potato', emoji: '🍠' }
+            ],
+            monthly: [
+                { name: 'Red Meat', emoji: '🥩' },
+                { name: 'Desserts', emoji: '🍰' },
+                { name: 'Fried Food', emoji: '🍟' },
+                { name: 'Alcohol', emoji: '🍷' },
+                { name: 'Processed Snacks', emoji: '🍪' }
+            ]
+        };
+
+        const quotes = [
+            "Your body is a temple, nourish it with care!",
+            "Healthy eating is a form of self-respect.",
+            "You are what you eat, so eat something awesome!",
+            "Take care of your body, it's the only place you have to live.",
+            "Small changes lead to big results. Keep going!",
+            "Every healthy choice is a step towards a better you.",
+            "Fuel your body with the good stuff!"
+        ];
+
+        let trackedFoods = JSON.parse(localStorage.getItem('trackedFoods')) || {};
+        let history = JSON.parse(localStorage.getItem('foodHistory')) || [];
+        let lastResetDate = localStorage.getItem('lastResetDate') || new Date().toDateString();
+        let dailyProgress = JSON.parse(localStorage.getItem('dailyProgress')) || {};
+        let currentCalendarMonth = new Date();
+
+        function initializeApp() {
+            checkDailyReset();
+            renderFoods();
+            updateStats();
+            updateHistory();
+            setRandomQuote();
+            renderCalendar();
+            setInterval(setRandomQuote, 30000);
+        }
+
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (lastResetDate !== today) {
+                saveDailyProgress(); // Save yesterday's progress before resetting
+                trackedFoods = {};
+                localStorage.setItem('trackedFoods', JSON.stringify(trackedFoods));
+                lastResetDate = today;
+                localStorage.setItem('lastResetDate', lastResetDate);
+            }
+        }
+
+        function saveDailyProgress() {
+            const date = lastResetDate;
+            const dailyChecked = Object.keys(trackedFoods).filter(key => 
+                key.startsWith('daily') && trackedFoods[key]
+            ).length;
+            const weeklyChecked = Object.keys(trackedFoods).filter(key => 
+                key.startsWith('weekly') && trackedFoods[key]
+            ).length;
+
+            const dailyPercentage = (dailyChecked / foods.daily.length) * 100;
+            const weeklyPercentage = (weeklyChecked / foods.weekly.length) * 100;
+            const overallPercentage = (dailyPercentage * 0.7 + weeklyPercentage * 0.3); // Daily is more important
+
+            const checkedFoods = Object.keys(trackedFoods)
+                .filter(key => trackedFoods[key])
+                .map(key => {
+                    const [frequency, index] = key.split('-');
+                    return foods[frequency][parseInt(index)];
+                });
+
+            dailyProgress[date] = {
+                dailyChecked,
+                weeklyChecked,
+                dailyTotal: foods.daily.length,
+                weeklyTotal: foods.weekly.length,
+                overallPercentage: Math.round(overallPercentage),
+                foods: checkedFoods
+            };
+
+            localStorage.setItem('dailyProgress', JSON.stringify(dailyProgress));
+        }
+
+        function renderCalendar() {
+            const year = currentCalendarMonth.getFullYear();
+            const month = currentCalendarMonth.getMonth();
+            
+            document.getElementById('monthTitle').textContent = 
+                currentCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+
+            // Add empty cells for days before the first day
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day';
+                emptyDay.style.opacity = '0';
+                calendarGrid.appendChild(emptyDay);
+            }
+
+            // Add days of the month
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toDateString();
+                const isToday = dateString === today.toDateString();
+                const progress = dailyProgress[dateString];
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+                
+                if (isToday) {
+                    dayDiv.classList.add('today');
+                }
+
+                if (progress) {
+                    if (progress.overallPercentage >= 75) {
+                        dayDiv.classList.add('completed');
+                    } else if (progress.overallPercentage >= 50) {
+                        dayDiv.classList.add('partial');
+                    }
+                    dayDiv.innerHTML = `
+                        <div class="day-number">${day}</div>
+                        <div class="day-score">${progress.overallPercentage}%</div>
+                    `;
+                } else if (date <= today) {
+                    dayDiv.innerHTML = `
+                        <div class="day-number">${day}</div>
+                        <div class="day-score">-</div>
+                    `;
+                } else {
+                    dayDiv.innerHTML = `<div class="day-number">${day}</div>`;
+                }
+
+                if (progress || (isToday && Object.keys(trackedFoods).length > 0)) {
+                    dayDiv.onclick = () => showDayDetail(dateString, isToday);
+                }
+
+                calendarGrid.appendChild(dayDiv);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function showDayDetail(dateString, isToday) {
+            const modal = document.getElementById('dayModal');
+            const date = new Date(dateString);
+            
+            document.getElementById('modalDate').textContent = 
+                date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            let progress;
+            let foodsList;
+
+            if (isToday) {
+                // Show current day's progress
+                const dailyChecked = Object.keys(trackedFoods).filter(key => 
+                    key.startsWith('daily') && trackedFoods[key]
+                ).length;
+                const weeklyChecked = Object.keys(trackedFoods).filter(key => 
+                    key.startsWith('weekly') && trackedFoods[key]
+                ).length;
+                
+                progress = {
+                    dailyChecked,
+                    weeklyChecked,
+                    dailyTotal: foods.daily.length,
+                    weeklyTotal: foods.weekly.length
+                };
+
+                foodsList = Object.keys(trackedFoods)
+                    .filter(key => trackedFoods[key])
+                    .map(key => {
+                        const [frequency, index] = key.split('-');
+                        return foods[frequency][parseInt(index)];
+                    });
+            } else {
+                progress = dailyProgress[dateString];
+                foodsList = progress.foods;
+            }
+
+            document.getElementById('modalStats').innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-label">Daily Goals</span>
+                    <span class="stat-value">${progress.dailyChecked}/${progress.dailyTotal}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Weekly Goals</span>
+                    <span class="stat-value">${progress.weeklyChecked}/${progress.weeklyTotal}</span>
+                </div>
+            `;
+
+            const foodListHTML = foodsList && foodsList.length > 0
+                ? foodsList.map(food => `
+                    <div class="modal-food-item">
+                        <span style="font-size: 1.5em;">${food.emoji}</span>
+                        <span>${food.name}</span>
+                    </div>
+                `).join('')
+                : '<p style="text-align: center; color: #999; padding: 20px;">No food tracked this day</p>';
+
+            document.getElementById('modalFoodList').innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #667eea;">Foods Consumed:</h3>
+                ${foodListHTML}
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('dayModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('dayModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        function renderFoods() {
+            ['daily', 'weekly', 'monthly'].forEach(frequency => {
+                const container = document.getElementById(`${frequency}Foods`);
+                container.innerHTML = '';
+                
+                foods[frequency].forEach((food, index) => {
+                    const foodId = `${frequency}-${index}`;
+                    const isChecked = trackedFoods[foodId] || false;
+                    
+                    const foodDiv = document.createElement('div');
+                    foodDiv.className = `food-item ${isChecked ? 'checked' : ''}`;
+                    foodDiv.innerHTML = `
+                        <span class="food-emoji">${food.emoji}</span>
+                        <span class="food-name">${food.name}</span>
+                    `;
+                    foodDiv.onclick = () => toggleFood(foodId, food, frequency);
+                    container.appendChild(foodDiv);
+                });
+            });
+        }
+
+        function toggleFood(foodId, food, frequency) {
+            trackedFoods[foodId] = !trackedFoods[foodId];
+            
+            if (trackedFoods[foodId]) {
+                addToHistory(food.name, food.emoji);
+            } else {
+                removeFromHistory(food.name);
+            }
+            
+            localStorage.setItem('trackedFoods', JSON.stringify(trackedFoods));
+            renderFoods();
+            updateStats();
+            updateHistory();
+        }
+
+        function updateStats() {
+            const dailyChecked = Object.keys(trackedFoods).filter(key => 
+                key.startsWith('daily') && trackedFoods[key]
+            ).length;
+            const weeklyChecked = Object.keys(trackedFoods).filter(key => 
+                key.startsWith('weekly') && trackedFoods[key]
+            ).length;
+
+            document.getElementById('dailyCount').textContent = `${dailyChecked}/${foods.daily.length}`;
+            document.getElementById('weeklyCount').textContent = `${weeklyChecked}/${foods.weekly.length}`;
+            
+            const dailyProgress = (dailyChecked / foods.daily.length) * 100;
+            const weeklyProgress = (weeklyChecked / foods.weekly.length) * 100;
+            
+            document.getElementById('dailyProgress').style.width = `${dailyProgress}%`;
+            document.getElementById('weeklyProgress').style.width = `${weeklyProgress}%`;
+
+            updateStreak();
+            
+            // Save current progress for today
+            saveTodayProgress();
+        }
+
+        function saveTodayProgress() {
+            const today = new Date().toDateString();
+            const dailyChecked = Object.keys(trackedFoods).filter(key => 
+                key.startsWith('daily') && trackedFoods[key]
+            ).length;
+            const weeklyChecked = Object.keys(trackedFoods).filter(key => 
+                key.startsWith('weekly') && trackedFoods[key]
+            ).length;
+
+            const dailyPercentage = (dailyChecked / foods.daily.length) * 100;
+            const weeklyPercentage = (weeklyChecked / foods.weekly.length) * 100;
+            const overallPercentage = (dailyPercentage * 0.7 + weeklyPercentage * 0.3);
+
+            const checkedFoods = Object.keys(trackedFoods)
+                .filter(key => trackedFoods[key])
+                .map(key => {
+                    const [frequency, index] = key.split('-');
+                    return foods[frequency][parseInt(index)];
+                });
+
+            dailyProgress[today] = {
+                dailyChecked,
+                weeklyChecked,
+                dailyTotal: foods.daily.length,
+                weeklyTotal: foods.weekly.length,
+                overallPercentage: Math.round(overallPercentage),
+                foods: checkedFoods
+            };
+
+            localStorage.setItem('dailyProgress', JSON.stringify(dailyProgress));
+            renderCalendar(); // Update calendar when progress changes
+        }
+
+        function updateStreak() {
+            const streakDays = calculateStreak();
+            document.getElementById('streak').textContent = `${streakDays} days 🔥`;
+        }
+
+        function calculateStreak() {
+            return Math.floor(Math.random() * 10) + 1; // Simplified for demo
+        }
+
+        function addToHistory(foodName, emoji) {
+            const timestamp = new Date().toLocaleTimeString();
+            history.unshift({ name: foodName, emoji: emoji, time: timestamp, date: new Date().toDateString() });
+            if (history.length > 20) history.pop();
+            localStorage.setItem('foodHistory', JSON.stringify(history));
+        }
+
+        function removeFromHistory(foodName) {
+            history = history.filter(item => item.name !== foodName || item.date !== new Date().toDateString());
+            localStorage.setItem('foodHistory', JSON.stringify(history));
+        }
+
+        function updateHistory() {
+            const historyContainer = document.getElementById('historyList');
+            const todayHistory = history.filter(item => item.date === new Date().toDateString());
+            
+            if (todayHistory.length === 0) {
+                historyContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No activity yet today</p>';
+                return;
+            }
+            
+            historyContainer.innerHTML = todayHistory.map(item => `
+                <div class="history-item">
+                    <span>${item.emoji} ${item.name}</span>
+                    <span class="history-date">${item.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function resetToday() {
+            if (confirm('Are you sure you want to reset today\'s progress?')) {
+                console.log('Resetting today - before:', trackedFoods);
+                
+                // Clear tracked foods completely
+                Object.keys(trackedFoods).forEach(key => {
+                    delete trackedFoods[key];
+                });
+                trackedFoods = {};
+                
+                localStorage.removeItem('trackedFoods');
+                localStorage.setItem('trackedFoods', JSON.stringify({}));
+                
+                // Clear today's history
+                const today = new Date().toDateString();
+                history = history.filter(item => item.date !== today);
+                localStorage.setItem('foodHistory', JSON.stringify(history));
+                
+                // Remove today's progress from daily progress
+                if (dailyProgress[today]) {
+                    delete dailyProgress[today];
+                    localStorage.setItem('dailyProgress', JSON.stringify(dailyProgress));
+                }
+                
+                console.log('Resetting today - after:', trackedFoods);
+                
+                // Force re-render everything
+                renderFoods();
+                updateStats();
+                updateHistory();
+                renderCalendar();
+                
+                alert('✅ Today\'s progress has been reset!');
+            }
+        }
+
+        function exportData() {
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                trackedFoods: trackedFoods,
+                dailyProgress: dailyProgress,
+                history: history,
+                lastResetDate: lastResetDate
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `diet-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            alert('✅ Data exported successfully! Save this file to backup your progress.');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.version) {
+                        alert('❌ Invalid file format. Please select a valid backup file.');
+                        return;
+                    }
+
+                    if (confirm('⚠️ This will replace all your current data. Are you sure you want to continue?')) {
+                        trackedFoods = importedData.trackedFoods || {};
+                        dailyProgress = importedData.dailyProgress || {};
+                        history = importedData.history || [];
+                        lastResetDate = importedData.lastResetDate || new Date().toDateString();
+
+                        localStorage.setItem('trackedFoods', JSON.stringify(trackedFoods));
+                        localStorage.setItem('dailyProgress', JSON.stringify(dailyProgress));
+                        localStorage.setItem('foodHistory', JSON.stringify(history));
+                        localStorage.setItem('lastResetDate', lastResetDate);
+
+                        // Refresh everything
+                        renderFoods();
+                        updateStats();
+                        updateHistory();
+                        renderCalendar();
+
+                        alert('✅ Data imported successfully!');
+                    }
+                } catch (error) {
+                    alert('❌ Error reading file. Please make sure it\'s a valid backup file.');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function printReport() {
+            // Save current scroll position
+            const scrollPos = window.pageYOffset;
+            
+            // Trigger print dialog
+            window.print();
+            
+            // Restore scroll position after print dialog closes
+            setTimeout(() => {
+                window.scrollTo(0, scrollPos);
+            }, 100);
+        }
+
+        function setRandomQuote() {
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById('quote').textContent = randomQuote;
+        }
+
+        initializeApp();
+    </script>
+</body>
+</html>
